@@ -36,9 +36,9 @@ def get_animals():
         col_names = [col.name for col in cur.description or []]
         cur.close()
     except Exception as e:
-        return json.dumps({ 'error': 1, 'message': str(e) })
+        return { 'error': 1, 'message': str(e) }
 
-    return json.dumps({ 'headers': col_names, 'data': animals})
+    return { 'headers': col_names, 'data': animals }
 
 def get_query():
     return '''select
