@@ -1,7 +1,7 @@
 from typing import Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import db
+import db, json
 
 app = FastAPI()
 
@@ -33,12 +33,12 @@ def get_animals():
         cur = db.get_db().cursor()
         cur.execute(get_query())
         animals = cur.fetchall()
-        col_names = cur.description
+        col_names = [col.name for col in cur.description or []]
         cur.close()
     except Exception as e:
-        flash(getattr(e, 'message', repr(e)))
+        return json.dumps({ 'error': 1, 'message': str(e) })
 
-    return render_template('home.html', animals=animals, col_names=col_names)
+    return json.dumps({ 'headers': col_names, 'data': animals})
 
 def get_query():
     return '''select
