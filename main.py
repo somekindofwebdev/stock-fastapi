@@ -1,6 +1,7 @@
 from typing import Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import db
 
 app = FastAPI()
 
@@ -24,3 +25,29 @@ def read_root():
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
+
+@app.get("/animals")
+def get_animals():
+    animals = col_names = None
+    try:
+        cur = db.get_db().cursor()
+        cur.execute(get_query())
+        animals = cur.fetchall()
+        col_names = cur.description
+        cur.close()
+    except Exception as e:
+        flash(getattr(e, 'message', repr(e)))
+
+    return render_template('home.html', animals=animals, col_names=col_names)
+
+def get_query():
+    return '''select
+	animals.id "Animal ID",
+	genotypes.genotype "Genotype",
+	breeds.breed "Breed",
+	tags.tag_no "Tag No."
+    from
+	animals
+	left join genotypes on genotype_id = genotypes.id
+	left join breeds on breed_id = breeds.id
+	left join tags on tag_id = tags.id'''
