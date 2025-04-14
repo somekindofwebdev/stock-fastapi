@@ -1,7 +1,11 @@
-from typing import Union
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-import db, json, datasources
+from sqlalchemy import select, ScalarResult
+from sqlalchemy.orm import Session
+from typing import List
+from db.models import Animal, Genotype, Breed, Tag
+from responses.schemas import AnimalOut
+import db.conn, datasources, validation
 
 app = FastAPI()
 
@@ -26,19 +30,18 @@ def read_root():
 def read_item(datasource: str):
     return datasources.get_options(datasource)
 
-@app.get("/animals")
-def get_animals():
-    animals = col_names = None
-    try:
-        cur = db.get_db().cursor()
-        cur.execute(get_query())
-        animals = cur.fetchall()
-        col_names = [col.name for col in cur.description or []]
-        cur.close()
-    except Exception as e:
-        return { 'error': 1, 'message': str(e) }
+@app.get("/animals", response_model=List[AnimalOut])
+async def get_animals(session: Session = Depends(db.conn.get_db)) -> List[AnimalOut]:
+    query = session.query(Animal).join(Genotype).join(Breed).join(Tag)
+    print(query.all())
+    return query.all()
 
-    return { 'headers': col_names, 'data': animals }
+    #     return { 'error': 1, 'message': str(e) }
+
+@app.post("/animals")
+def add_animal(animal: Animal):
+    if not validation.check_genotype(animal.breed, animal.genotype):
+        return "{0} is not a type of {1}".format(animal.breed, animal.genotype)
 
 def get_query():
     return '''select
