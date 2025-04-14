@@ -12,5 +12,7 @@ def get_options(datasource: str):
 
     return { 'options': options }
 
-def get_options_query(datasource):
+def get_options_query(datasource: str):
     return 'select id, {0} from {0}s'.format(datasource)
+    # if (filter_table):
+    #     query += ' JOIN {1}s ON {0}s.{1}_id = {1}s.id'.format(datasource)

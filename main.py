@@ -23,7 +23,7 @@ def read_root():
 
 
 @app.get("/options/{datasource}")
-def read_item(datasource):
+def read_item(datasource: str):
     return datasources.get_options(datasource)
 
 @app.get("/animals")
