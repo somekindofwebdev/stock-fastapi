@@ -22,4 +22,6 @@ def get_options(datasource: str):# -> List[DropdownOption]:
         case 'tag':
             type = Tag
 
-    return [DropdownOption(option.id, getattr(option, datasource)) for option in session.execute(select(type)).all()]
+
+    options = session.execute(select(type)).all()
+    return [DropdownOption(id=option[0].id, value=getattr(option[0], datasource)) for option in options]
