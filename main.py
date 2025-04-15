@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from db.models import Animal, Genotype, Breed, Tag
 from responses.schemas import AnimalOut, DropdownOptionOut
+from datasources import DropdownOption
 import db.conn, datasources, validation
 
 app = FastAPI()
@@ -27,7 +28,7 @@ def read_root():
 
 
 @app.get("/options/{datasource}", response_model=List[DropdownOptionOut])
-def read_item(datasource: str):
+def read_item(datasource: str) -> List[DropdownOption]:
     return datasources.get_options(datasource)
 
 @app.get("/animals", response_model=List[AnimalOut])
@@ -39,6 +40,7 @@ async def get_animals() -> List[Animal]:
         .join(Genotype, Animal.genotype_id == Genotype.id)
         .join(Breed, Animal.breed_id == Breed.id)
         .join(Tag)
+        .order_by(Animal.id)
     )
 
     return session.execute(query).all()

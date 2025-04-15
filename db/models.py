@@ -24,7 +24,7 @@ class Breed(Base):
     genotype_id: Mapped[int] = mapped_column(ForeignKey('genotypes.id'))
 
     def __repr__(self) -> str:
-        return f"Breed(id={self.id!r}, breed={self.breed!r}, genotype={self.genotype_id!r})"
+        return f"Breed(id={self.id!r}, breed={self.breed!r}, genotype_id={self.genotype_id!r})"
 
 class Tag(Base):
     __tablename__ = 'tags'
