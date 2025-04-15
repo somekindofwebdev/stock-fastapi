@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from typing import List
 from db.models import Animal, Genotype, Breed, Tag
-from responses.schemas import AnimalOut
+from responses.schemas import AnimalOut, DropdownOptionOut
 import db.conn, datasources, validation
 
 app = FastAPI()
@@ -26,31 +26,26 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/options/{datasource}")
+@app.get("/options/{datasource}", response_model=List[DropdownOptionOut])
 def read_item(datasource: str):
     return datasources.get_options(datasource)
 
 @app.get("/animals", response_model=List[AnimalOut])
-async def get_animals(session: Session = Depends(db.conn.get_db)) -> List[AnimalOut]:
-    query = session.query(Animal).join(Genotype).join(Breed).join(Tag)
-    print(query.all())
-    return query.all()
+async def get_animals() -> List[Animal]:
+    session = Session(db.conn.get_db())
+    query = (
+        select(Animal.id, Genotype.genotype, Breed.breed, Tag.tag_no)
+        .select_from(Animal)
+        .join(Genotype, Animal.genotype_id == Genotype.id)
+        .join(Breed, Animal.breed_id == Breed.id)
+        .join(Tag)
+    )
+
+    return session.execute(query).all()
 
     #     return { 'error': 1, 'message': str(e) }
 
-@app.post("/animals")
-def add_animal(animal: Animal):
-    if not validation.check_genotype(animal.breed, animal.genotype):
-        return "{0} is not a type of {1}".format(animal.breed, animal.genotype)
-
-def get_query():
-    return '''select
-	animals.id "Animal ID",
-	genotypes.genotype "Genotype",
-	breeds.breed "Breed",
-	tags.tag_no "Tag No."
-    from
-	animals
-	left join genotypes on genotype_id = genotypes.id
-	left join breeds on breed_id = breeds.id
-	left join tags on tag_id = tags.id'''
+# @app.post("/animals")
+# def add_animal(animal: Animal):
+#     if not validation.check_genotype(animal.breed, animal.genotype):
+#         return "{0} is not a type of {1}".format(animal.breed, animal.genotype)

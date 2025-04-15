@@ -1,11 +1,15 @@
-from pydantic import BaseModel
-from db.models import Genotype, Breed, Tag
+from pydantic import BaseModel, ConfigDict
 
 class AnimalOut(BaseModel):
     id: int
-    genotype: Genotype
-    breed: Breed
-    tag: Tag
+    genotype: str
+    breed: str
+    tag_no: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
+class DropdownOptionOut(BaseModel):
+    id: int
+    value: str
+
+    model_config = ConfigDict(from_attributes=True)

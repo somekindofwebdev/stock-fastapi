@@ -1,15 +1,9 @@
 import db
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from db.models import Breed
 
-def check_genotype(breed, genotype):
-    try:
-        cur = db.get_db().cursor()
-        cur.execute(check_genotype_query(datasource))
-        options = cur.fetchone()
-        cur.close()
-    except Exception as e:
-        return { 'error': 1, 'message': str(e) }
+def check_genotype(breed, genotype, session: Session = Depends(db.conn.get_db)):
+    query = session.query(Breed).where(Breed.id == breed).where(Breed.genotype == genotype)
 
-    return bool(options)
-
-def check_genotype_query(breed, genotype):
-    return 'select * from breeds where id = {0} and genotype_id = {1}'.format(breed, genotype)
+    return bool(session.scalars(query).one())

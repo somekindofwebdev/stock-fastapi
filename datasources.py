@@ -1,18 +1,23 @@
-import db
+from typing import List
+import db.conn
+from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from db.models import Animal, Genotype, Breed, Tag
 
-def get_options(datasource: str):
-    options = None
-    try:
-        cur = db.get_db().cursor()
-        cur.execute(get_options_query(datasource))
-        options = cur.fetchall()
-        cur.close()
-    except Exception as e:
-        return { 'error': 1, 'message': str(e) }
+class DropdownOption:
+    def __init__(self, id: int, value: str):
+        self.id = id
+        self.value = value
 
-    return { 'options': options }
+async def get_options(datasource: str, session: Session = Depends(db.conn.get_db)) -> List[DropdownOption]:
+    type = Animal;
+    match datasource:
+        case 'genotype':
+            type = Genotype
+        case 'breed':
+            type = Breed
+        case 'tag':
+            type = Tag
 
-def get_options_query(datasource: str):
-    return 'select id, {0} from {0}s'.format(datasource)
-    # if (filter_table):
-    #     query += ' JOIN {1}s ON {0}s.{1}_id = {1}s.id'.format(datasource)
+    return [DropdownOption(option.id, getattr(option, datasource)) for option in session.scalars(select(type)).all()]
